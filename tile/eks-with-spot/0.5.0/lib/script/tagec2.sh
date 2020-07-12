@@ -15,7 +15,7 @@ while read instanceId <&5 ; do
     read instanceLifecycle <&5
     read privateDnsName <&5
     echo "$instanceId Lifecycle = $instanceLifecycle"
-    if [ $instanceLifecycle = "spot" ]
+    if [ "$instanceLifecycle" = "spot" ]
     then
         echo "tag $instanceId"
         aws ec2 create-tags --resources $instanceId --tags Key=lifecycle,Value=spot || true

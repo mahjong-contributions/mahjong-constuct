@@ -4,7 +4,7 @@ while true
 do
     endpoint=`aws es describe-elasticsearch-domain \
         --domain-name $1 |jq -r '.DomainStatus.Endpoint'`
-    if [ $endpoint != "null" ]
+    if [ "$endpoint" != "null" ]
     then 
         
         echo "Domain : $1 is ready : $endpoint."

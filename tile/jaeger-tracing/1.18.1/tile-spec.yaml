@@ -32,7 +32,7 @@ spec:
       - name: SetupJaeger
         command: |
           strategy=$(self.inputs.deploymentStrategy)
-          if [ $strategy = "prod" ]
+          if [ "$strategy" = "prod" ]
           then
             kubectl apply -f lib/prod-setup.yaml
           else

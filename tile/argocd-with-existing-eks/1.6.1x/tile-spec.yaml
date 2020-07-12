@@ -75,7 +75,7 @@ spec:
           argocdManagerToken=`kubectl get serviceaccount/argocd-manager -n kube-system -o json|jq -r '.secrets[0].name'`
 
           os=`uname -s`
-          if [ $os = "Linux" ]
+          if [ "$os" = "Linux" ]
           then
             bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -d`
           else

@@ -29,7 +29,7 @@ spec:
         readinessProbe:
           command: |
             hostname=`kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
-            if [ $hostname = "" ]
+            if [ "$hostname" = "" ]
             then
               echo "Failed to get hostname"
               exit 1

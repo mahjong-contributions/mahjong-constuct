@@ -48,7 +48,7 @@ spec:
           git checkout $APP_BRANCH
           git pull
           prod_redis_endpoint=$(self.inputs.prodRedisEndpoint)
-          if [ $prod_redis_endpoint != "" ]
+          if [ "$prod_redis_endpoint" != "" ]
           then 
             cd manifests/kustomize/production/air
             sed -i -e 's/redis-cart:6379/'$prod_redis_endpoint'/g' air-deployment.yaml
@@ -109,7 +109,7 @@ spec:
           argocdManagerToken=`kubectl get serviceaccount/argocd-manager -n kube-system -o json|jq -r '.secrets[0].name'`
 
           os=`uname -s`
-          if [ $os = "Linux" ]
+          if [ "$os" = "Linux" ]
           then
             bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -d`
           else
