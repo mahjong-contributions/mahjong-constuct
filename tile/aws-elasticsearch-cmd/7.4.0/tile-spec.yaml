@@ -21,7 +21,14 @@ spec:
           
       - name: ProvisionDomain
         command: |
-          endpoint=`aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.Endpoint'`
+          aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) || error=true
+          if [ ${error} ]
+          then
+              echo "$(self.inputs.domainName) is not existed!"
+              endpoint=null
+          else
+            endpoint=`aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.Endpoint'`
+          fi
           if [[ $endpoint = "null" || $endpoint = "" ]]
           then 
             cd $TILE_HOME/lib
