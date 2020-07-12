@@ -49,7 +49,7 @@ spec:
       require: true
     - name: deploymentStrategy
       inputType: String
-      descritpion: 'simple - for dev/test; prod - for production'
+      description: 'simple - for dev/test; prod - for production'
       require: true
 
           
