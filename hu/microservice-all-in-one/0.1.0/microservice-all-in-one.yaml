@@ -232,6 +232,11 @@ spec:
         value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/v1/city/beijing
       
     notes:
-      - Air qulity of city - "/air/city/:city"
-      - Air qulity of GEO - "/air/geo/:lat/:lng"
-      - Definition for AQI - "/air/aqi"
+      - |
+        Jaeger tracing : kubectl port-forward svc/tracing 8080:80 -n istio-system
+      - |
+        Prometheus : kubectl port-forward svc/prometheus 9090:9090 -n istio-system
+      - |
+        Grafana : kubectl port-forward svc/grafana 3000:3000 -n istio-system
+      - |
+        Kiali (admin/admin) : kubectl port-forward svc/kiali 20001:20001 -n istio-system
