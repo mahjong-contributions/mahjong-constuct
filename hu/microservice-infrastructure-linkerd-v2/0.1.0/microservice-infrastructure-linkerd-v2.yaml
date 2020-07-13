@@ -130,7 +130,7 @@ spec:
       # Jaeger for Prod
       tileJaegerTracingProd:
         tileReference: Jaeger-Tracing
-        tileVersion: 1.8.1
+        tileVersion: 1.18.1
         dependsOn: 
           - tileEksWithSpotProd
         inputs:
@@ -144,7 +144,7 @@ spec:
       # Jaeger for Stage
       tileJaegerTracingStage:
         tileReference: Jaeger-Tracing
-        tileVersion: 1.8.1
+        tileVersion: 1.18.1
         dependsOn: 
           - tileEksWithSpotStage
         inputs:
@@ -154,11 +154,34 @@ spec:
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
           - name: deploymentStrategy
             inputValue: prod
+            
+      # SealedSecret-With-Existing-EKS for Production
+      tileSealedSecretProd:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
 
+      # SealedSecret-With-Existing-EKS for Stage
+      tileSealedSecretStage:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
       # ArgoCD
-      tileArgocdWithExsitingEks152:
+      tileArgocdWithExsitingEks161x:
         tileReference: Argocd-With-Existing-EKS
-        tileVersion: 1.5.6
+        tileVersion: 1.6.1x
         dependsOn: 
           - tileLinkerdProd
           - tileLinkerdStage
@@ -167,6 +190,22 @@ spec:
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN) 
+          - name: prodClusterCertificateAuthorityData
+            inputValue: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
+          - name: prodClusterArn
+            inputValue: $(tileEksWithSpotProd.outputs.clusterArn)
+          - name: prodClusterEndpoint
+            inputValue: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+          - name: prodClusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: prodMasterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+          - name: githubUser
+            inputValue: <<parameter>> - github user
+          - name: githubAccessToken
+            inputValue: <<parameter>> - github access token
+          - name: appConfRepo
+            inputValue: go-microservice-config     
       
 
 
