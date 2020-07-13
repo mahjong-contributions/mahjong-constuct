@@ -1,0 +1,36 @@
+{
+    "name": "__application_name__-service-build",
+    "source": {
+        "type": "GITHUB",
+        "location": "__github_repo__",
+        "gitCloneDepth": 0,
+        "gitSubmodulesConfig": {
+            "fetchSubmodules": true
+        },
+        "buildspec": "buildspec.yaml",
+        "reportBuildStatus": false,
+        "insecureSsl": false
+    },
+    "sourceVersion": "__application_name__",
+    "artifacts": {
+        "type": "NO_ARTIFACTS"
+    },
+    "cache": {
+        "type": "NO_CACHE"
+    },
+    "environment": {
+        "type": "LINUX_CONTAINER",
+        "image": "aws/codebuild/standard:2.0",
+        "computeType": "BUILD_GENERAL1_SMALL",
+        "privilegedMode": true,
+        "imagePullCredentialsType": "CODEBUILD"
+    },
+    "timeoutInMinutes": 60,
+    "queuedTimeoutInMinutes": 480,
+    "badgeEnabled": true,
+    "logsConfig": {
+        "cloudWatchLogs": {
+            "status": "ENABLED"
+        }
+    }
+}

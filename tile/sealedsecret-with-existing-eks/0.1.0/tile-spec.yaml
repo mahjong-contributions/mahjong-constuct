@@ -16,11 +16,6 @@ spec:
       inputType: String
       require: true
     # String
-    - name: namespace
-      inputType: String
-      require: false
-      defaultValue: kube-system
-    # String
     - name: tlsCrt
       inputType: String
       require: false
@@ -30,8 +25,6 @@ spec:
 
   global:
     env:
-      - name: NAMESPACE_NAME
-        value: $(self.inputs.namespace)
       - name: TLS_KEY
         value: $(self.inputs.tlsKey)
       - name: TLS_CRT
@@ -46,13 +39,9 @@ spec:
               -e 's/TLS_KEY/'$TLS_KEY'/g' ./key.yaml > ./key-go.yaml
       - name: InstallExistingKeyIfHave
         command: |
-          [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl create ns $NAMESPACE_NAME || true
-          [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl apply -f ./key-go.yaml -n $NAMESPACE_NAME
-      - name: SetupNamespaceForController
-        command: |
-          cd $TILE_HOME/lib/k8s
-          sed -e 's/NAMESPACE_NAME/'$NAMESPACE_NAME'/g' \
-              ./controller-0.12.4.yaml > ./controller-0.12.4-go.yaml
+          [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl create ns kube-system || true
+          [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl apply -f ./key-go.yaml -n kube-system
+
   outputs:
     - name: namespace
       outputType: String
@@ -62,6 +51,6 @@ spec:
     manifestType: K8s
     namespace: kube-system
     files:
-      - k8s/controller-0.12.4-go.yaml
+      - k8s/controller-0.12.4.yaml
 
   notes: []

@@ -84,7 +84,7 @@ export class EksWithSpot extends cdk.Construct {
       vpcSubnets: vpcSubnets,
       clusterName: props.clusterName,
       defaultCapacity: 0,
-      version: props.clusterVersion || '1.16',
+      version: eks.KubernetesVersion.of(props.clusterVersion || '1.16'),
       // Master role as initial permission to run Kubectl
       mastersRole: eksRole,
       securityGroup: this.controlPlaneSG,

@@ -3,7 +3,7 @@ kind: Tile
 metadata:
     name: Jaeger-Tracing
     category: ContainerApplication
-    version: 1.8.1
+    version: 1.18.1
     dependentOnVendorService: EKS
 # Specification
 spec: 
@@ -12,19 +12,19 @@ spec:
       - name: InstalJaeger
         command: |
             cd $TILE_HOME
-            kubectl create namespace observability
-            kubectl create -f lib/jaegertracing.io_jaegers_crd.yaml
-            kubectl create -n observability lib/service_account.yaml
-            kubectl create -n observability lib/role.yaml
-            kubectl create -n observability -f lib/role_binding.yaml
-            kubectl create -n observability -f lib/operator.yaml
+            kubectl create namespace observability || true
+            kubectl apply -f lib/jaegertracing.io_jaegers_crd.yaml
+            kubectl apply -n observability -f lib/service_account.yaml
+            kubectl apply -n observability -f lib/role.yaml
+            kubectl apply -n observability -f lib/role_binding.yaml
+            kubectl apply -n observability -f lib/operator.yaml
 
-            # kubectl create -f lib/cluster_role.yaml
-            # kubectl create -f lib/cluster_role_binding.yaml
+            # kubectl apply -f lib/cluster_role.yaml
+            # kubectl apply -f lib/cluster_role_binding.yaml
         readinessProbe:
           command: |
             kubectl get deployment jaeger-operator -n observability   
-          initialDelaySeconds: 120
+          initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 1200
           successThreshold: 1

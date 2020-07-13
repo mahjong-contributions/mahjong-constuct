@@ -3,7 +3,7 @@ kind: Tile
 metadata:
     name: Argocd-With-Existing-EKS
     category: ContainerApplication
-    version: 1.6.1
+    version: 1.6.1x
     # Dependent on what kind of vendor service, to determine what input parameters are required. 
     # For example, dependentOnVendorService: EKS, that's required 'clusterName', 'masterRoleARN'
     dependentOnVendorService: EKS
@@ -32,7 +32,7 @@ spec:
         readinessProbe:
           command: |
             count=`kubectl get deployment/argocd-server -n argocd -o json |jq '.status.readyReplicas'`
-            if [ $count -ne 1 ]
+            if [[ $count -ne 1 ]]
             then
               echo "ReadyReplicas of ArgoCD isn't equal to 1."
               exit 1
@@ -59,6 +59,7 @@ spec:
           kubectl apply -f lib/rollouts.yaml -n argo-rollouts
 
       - name: GetArgoCDToken
+        command: |
           ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`
           ARGOCD_BASE_URL=https://$ARGOCD_SERVER/argocd
           ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
@@ -67,7 +68,8 @@ spec:
         command: |
           cd $TILE_HOME/lib
           # add production cluster
-          aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
+          export AWS_REGION=`aws configure get region`
+          aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $KUBECONFIG
           kubectl apply -f ./argocd-remote.yaml -n kube-system
           sleep 5
           prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
@@ -88,7 +90,7 @@ spec:
               -e 's/__server__/'$prodClusterEndpoint'/g' ./add-cluster.json > ./add-cluster-go.json
           curl -s -k $ARGOCD_BASE_URL/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster-go.json"
 
-          # install Rollouts
+          # Install Rollouts for Remote Cluster
           kubectl create namespace argo-rollouts || true
           kubectl apply -f ./rollouts.yaml -n argo-rollouts
 
@@ -98,7 +100,7 @@ spec:
         readinessProbe:
           command: |
             retcode=`curl -H "Authorization: token $GITHUB_ACCESS_TOKEN" -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/$GITHUB_USER/$APP_CONF_REPO`
-            if [ $retcode -ne 200 ]
+            if [[ $retcode -ne 200 ]]
             then
               echo "failed to create repo"
               exit 1

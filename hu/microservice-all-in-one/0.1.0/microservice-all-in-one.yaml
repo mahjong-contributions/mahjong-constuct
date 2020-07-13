@@ -229,7 +229,7 @@ spec:
       - name: Jazz Endpoint for Stage
         value: http://$(tileIstio0ForStage.outputs.ingressHost)
       - name: Beijing Air for Stage
-        value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/city/beijing
+        value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/v1/city/beijing
       
     notes:
       - Air qulity of city - "/air/city/:city"

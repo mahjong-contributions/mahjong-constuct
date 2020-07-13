@@ -4,5 +4,5 @@ This is a application Tile, which would be deploy to EKS. It shows various possi
 
 ## Link:
 
-- http://<host>:<port>/air/city/:city
-- http://<host>:<port>/air/city/beijing
+- http://<host>:<port>/air/v1/city/:city
+- http://<host>:<port>/air/v1/city/beijing
