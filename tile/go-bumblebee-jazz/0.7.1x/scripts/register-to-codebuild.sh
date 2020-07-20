@@ -25,7 +25,12 @@ do
     echo "Activing webhook on Github with all events ..."
     aws codebuild create-webhook \
         --project-name ${project}-service-build \
-        --filter-groups '[[{"type": "EVENT", "pattern": "PUSH", "excludeMatchedPattern": false},{"type":"FILE_PATH","pattern": "src/'${project}'", "excludeMatchedPattern": false}]]'
+        --filter-groups '[
+            [{"type": "EVENT", "pattern": "PUSH", "excludeMatchedPattern": false},{"type":"FILE_PATH","pattern": "src/'${project}'", "excludeMatchedPattern": false}],
+            [{"type": "EVENT", "pattern": "PUSH", "excludeMatchedPattern": false},{"type":"FILE_PATH","pattern": "manifests/kustomize/'${project}'", "excludeMatchedPattern": false}],
+            [{"type": "EVENT", "pattern": "PUSH", "excludeMatchedPattern": false},{"type":"FILE_PATH","pattern": "manifests/kustomize/production/'${project}'", "excludeMatchedPattern": false}],
+            [{"type": "EVENT", "pattern": "PUSH", "excludeMatchedPattern": false},{"type":"FILE_PATH","pattern": "manifests/kustomize/staging/'${project}'", "excludeMatchedPattern": false}]
+        ]'
     echo "Done." 
 done
 

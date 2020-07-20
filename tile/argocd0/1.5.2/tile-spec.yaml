@@ -55,12 +55,12 @@ spec:
         name: eks
         field: capacityInstance
       defaultValue: c5.xlarge
-    - name: version
+    - name: clusterVersion
       inputType: String
       require: false
       override: 
         name: eks
-        field: version
+        field: clusterVersion
       defaultValue: 1.15
 
   #aws eks --region <region> update-kubeconfig --name <cluster> --role-arn <master role arn> --kubeconfig <config>

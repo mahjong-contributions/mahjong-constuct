@@ -2,7 +2,7 @@
     "name": "was-service-build",
     "source": {
         "type": "GITHUB",
-        "location": "https://github.com/cc4i/go-bumblebee.git",
+        "location": "https://github.com/mahjong-contributions/go-bumblebee-jazz.git",
         "gitCloneDepth": 0,
         "gitSubmodulesConfig": {
             "fetchSubmodules": true
@@ -11,7 +11,7 @@
         "reportBuildStatus": false,
         "insecureSsl": false
     },
-    "sourceVersion": "new-combo-jazz",
+    "sourceVersion": "master",
     "artifacts": {
         "type": "NO_ARTIFACTS"
     },

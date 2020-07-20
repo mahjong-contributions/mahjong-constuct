@@ -3,6 +3,31 @@ kind: Deployment
 metadata:
   name: microservice-all-in-one
   version: 0.1.0
+  description: |
+    The solution is designated for containerized microservices on AWS EKS, which provides all-in-one 
+    experience to simplify complexity and includes demo application to help understanding all 
+    capabilities. The solution will provision two seperated environments(stage and production), see 
+    following detail:
+    
+    - Stage 
+      1. VPC (priavte, public, isolation subnets, NAT)
+      2. EKS with worker nodes (Spot + On-Demand instances)
+      3. Istio
+      4. Prometheus, Grafana, Jeager Tracing, Kiali
+      5. ArgoCD
+      6. Sealed-Secret
+      7. Demo applications 
+      
+    - Production
+      1. EKS with worker nodes (Spot + On-Demand instances)
+      2. ElastiRedis
+      3. Elasticsearch
+      4. Istio
+      5. Prometheus, Grafana, Jeager Tracing, Kiali
+      6. FluentBit
+      7. Sealed-Secret
+      8. Demo applications
+    
 spec:
   template:
     tiles:
@@ -212,12 +237,18 @@ spec:
         value: $(tileEksWithSpotProd.outputs.masterRoleARN)
       - name: Endpoint for Production Cluster
         value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
-      - name: EKS Cluster for Staging
+      - name: Update KUBECONFIG for Prodcution
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotProd.outputs.clusterName) --region $(tileEksWithSpotProd.outputs.regionOfCluster) --role-arn $(tileEksWithSpotProd.outputs.masterRoleARN)
+
+      - name: EKS Cluster for Stage
         value: $(tileEksWithSpotStage.outputs.clusterName)
       - name: Master role for Staging Cluster
         value: $(tileEksWithSpotStage.outputs.masterRoleARN)
       - name: Endpoint for Staging Cluster
         value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+      - name: Update KUBECONFIG for Prodcution
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotStage.outputs.clusterName) --region $(tileEksWithSpotStage.outputs.regionOfCluster) --role-arn $(tileEksWithSpotStage.outputs.masterRoleARN)
+
       - name: Endpoint for AgroCD
         value: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
       - name: Administrator for AgroCD

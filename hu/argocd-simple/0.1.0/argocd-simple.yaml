@@ -18,7 +18,7 @@ spec:
             inputValue: 3
           - name: capacityInstance
             inputValue: m5.large
-          - name: version
+          - name: clusterVersion
             inputValue: 1.15
         manifests:
           namespace: argocd-new
