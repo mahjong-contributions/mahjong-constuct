@@ -3,6 +3,12 @@ kind: Deployment
 metadata:
   name: elastiredis-simple
   version: 0.1.0
+  description: |
+    The solution is designated to provision any edition of AWS ElastiCache Redis within your VPC.
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30  
+
 spec:
   template:
     tiles:

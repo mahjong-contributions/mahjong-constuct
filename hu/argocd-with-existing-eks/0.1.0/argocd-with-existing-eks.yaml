@@ -3,6 +3,13 @@ kind: Deployment
 metadata:
   name: argocd-with-existing-eks
   version: 0.1.0
+  description: |
+    The solution is a simple demo to provision continiouse delivery tool - ArgoCD on your 
+    choosing EKS.
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30  
+
 spec:
   template:
     tiles:

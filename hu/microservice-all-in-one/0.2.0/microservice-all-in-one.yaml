@@ -1,8 +1,36 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: perfect-microservice-jazz
-  version: 0.1.0
+  name: microservice-all-in-one
+  version: 0.2.0
+  description: |
+    The solution is designated for containerized microservices on AWS EKS, which provides all-in-one 
+    experience to simplify complexity and includes demo application to help understanding all 
+    capabilities. The solution will provision two seperated environments(stage and production), see 
+    following detail:
+    
+    - Stage 
+      1. VPC (priavte, public, isolation subnets, NAT)
+      2. EKS with worker nodes (Spot + On-Demand instances)
+      3. Istio
+      4. Prometheus, Grafana, Jeager Tracing, Kiali
+      5. ArgoCD
+      6. Sealed-Secret
+      7. Demo applications 
+      
+    - Production
+      1. EKS with worker nodes (Spot + On-Demand instances)
+      2. ElastiRedis
+      3. Elasticsearch
+      4. Istio
+      5. Prometheus, Grafana, Jeager Tracing, Kiali
+      6. FluentBit
+      7. Sealed-Secret
+      8. Demo applications
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30
+      
 spec:
   template:
     tiles:
@@ -28,7 +56,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: ore-keypair
+            inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -46,7 +74,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: ore-keypair
+            inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -57,7 +85,7 @@ spec:
       tileAWSElastiCacheRedis506Prod:
         tileReference: AWS-ElastiCache-Redis
         tileVersion: 5.0.6
-        dependsOn: 
+        dependsOn:
           - tileEksWithSpotProd
         inputs:
           - name: vpc
@@ -69,37 +97,6 @@ spec:
               - $cdk(tileEksWithSpotProd.Network0.privateSubnetId2)
           - name: redisClusterName
             inputValue: mahjong-redis-prod
-
-      # AuroraMySQL for Prod
-      tileAuroraMysqlProd:
-        tileReference: AWS-Aurora-Mysql
-        tileVersion: 2.07.2
-        dependsOn: 
-          - tileEksWithSpotProd
-        inputs:
-          - name: vpc
-            inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)        
-          - name: clusterIdentifier
-            inputValue: mahjong-mysql-prod        
-          - name: masterUser
-            inputValue: admin        
-          - name: defaultDatabaseName
-            inputValue: testDb     
-      # AuroraMySQL for Stage
-      tileAuroraMysqlStage:
-        tileReference: AWS-Aurora-Mysql
-        tileVersion: 2.07.2
-        dependsOn: 
-          - tileEksWithSpotStage
-        inputs:
-          - name: vpc
-            inputValue: $cdk(tileEksWithSpotStage.Network0.baseVpc)        
-          - name: clusterIdentifier
-            inputValue: mahjong-mysql-stage       
-          - name: masterUser
-            inputValue: admin        
-          - name: defaultDatabaseName
-            inputValue: testDb   
 
       # ElasticSearch for Prod
       tileElasticsearchCmdProd:
@@ -113,24 +110,12 @@ spec:
           - name: aesAccessRoleArn
             inputValue: $(tileEksWithSpotProd.outputs.nodesRoleARN)
       
-      # ElasticSearch for Stage
-      tileElasticsearchCmdStage:
-        tileReference: AWS-ElasticSearch-CMD
-        tileVersion: 7.4.0
-        dependsOn: 
-          - tileEksWithSpotStage
-        inputs:
-          - name: domainName
-            inputValue: mahjong-es-stage       
-          - name: aesAccessRoleArn
-            inputValue: $(tileEksWithSpotStage.outputs.nodesRoleARN)
-
       # FluentBit for Prod
       tileFluentBit4AesProd:
         tileReference: FluentBit-For-AES
         tileVersion: 1.4.6
         dependsOn: 
-          - tileEksWithSpotProd
+          - tileElasticsearchCmdProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
@@ -138,35 +123,23 @@ spec:
             inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
           - name: aesEndpoint
             inputValue: https://$(tileElasticsearchCmdProd.outputs.domainEndpoint)
-      # FluentBit for Stage
-      tileFluentBit4AesStage:
-        tileReference: FluentBit-For-AES
-        tileVersion: 1.4.6
-        dependsOn: 
-          - tileEksWithSpotStage
-        inputs:
-          - name: clusterName
-            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
-          - name: masterRoleARN
-            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
-          - name: aesEndpoint
-            inputValue: https://$(tileElasticsearchCmdStage.outputs.domainEndpoint)
 
       # Istio for Prod
       tileIstio0ForProd:
         tileReference: Istio0
-        tileVersion: 1.5.4
-        dependsOn:
+        tileVersion: 1.6.4
+        dependsOn: 
           - tileEksWithSpotProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+
       # Istio for Stage
       tileIstio0ForStage:
         tileReference: Istio0
-        tileVersion: 1.5.4
+        tileVersion: 1.6.4
         dependsOn: 
           - tileEksWithSpotStage
         inputs:
@@ -174,44 +147,89 @@ spec:
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
-      
-      # ArgoCD
-      tileArgocdWithExsitingEks152:
-        tileReference: Argocd-With-Existing-EKS
-        tileVersion: 1.5.6
+
+      # Install SealedSecret for Prod
+      tileSealedSecret010Prod:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
         dependsOn: 
-          - tileIstio0ForStage
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+
+      # Install SealedSecret for Stage
+      tileSealedSecret010Stage:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+
+      # ArgoCD
+      tileArgocdWithExsitingEks161x:
+        tileReference: Argocd-With-Existing-EKS
+        tileVersion: 1.6.1x
+        dependsOn: 
+          - tileLinkerdProd
+          - tileLinkerdStage
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN) 
-      
-      # Inject DEMO Applications & setup CI+CD
-      tileGoBumblebeeJazz071:
-        tileReference: Go-Bumblebee-Jazz
-        tileVersion: 0.7.1
-        inputs:
-          - name: gitAccessToken
-            inputValue: <Replace GitHub_Token by value>
-          - name: appRepo
-            inputValue: go-bumblebee
-          - name: appBranch
-            inputValue: new-combo-jazz
-          - name: appConfRepo
-            inputValue: go-bumblebee-jazz-config
-          - name: kmsKeyID
-            inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
-          - name: argocdBaseUrl
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
-          - name: argocdUser
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.user)
-          - name: argocdPassword
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.password)
           - name: prodClusterCertificateAuthorityData
             inputValue: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
           - name: prodClusterArn
             inputValue: $(tileEksWithSpotProd.outputs.clusterArn)
+          - name: prodClusterEndpoint
+            inputValue: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+          - name: prodClusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: prodMasterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+          - name: githubUser
+            inputValue: <<parameter>> - github user
+          - name: githubAccessToken
+            inputValue: <<parameter>> - github access token
+          - name: appConfRepo
+            inputValue: go-microservice-config  
+      
+      # Inject DEMO Applications & setup CI+CD
+      tileGoBumblebeeJazz071x:
+        tileReference: Go-Bumblebee-Jazz
+        tileVersion: 0.7.1x
+        dependsOn: 
+          - tileArgocdWithExsitingEks161x
+        inputs:
+          - name: appConfRepoUser
+            inputValue: mahjong-contributions
+          - name: appConfRepoAccessToken
+            inputValue: <<parameter>> - personal access token for GitHub
+          - name: appConfRepo
+            inputValue: master
+          - name: appConfRepoBranch
+            inputValue: go-bumblebee-jazz-config
+          - name: appRepoUser
+            inputValue: mahjong-contributions
+          - name: appRepo
+            inputValue: go-bumblebee-jazz
+          - name: appRepoBranch
+            inputValue: master
+          - name: kmsKeyID
+            inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
+          - name: argocdBaseUrl
+            inputValue: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
+          - name: argocdUser
+            inputValue: $(tileArgocdWithExsitingEks161.outputs.user)
+          - name: argocdPassword
+            inputValue: $(tileArgocdWithExsitingEks161.outputs.password)
           - name: prodClusterEndpoint
             inputValue: $(tileEksWithSpotProd.outputs.clusterEndpoint)
           - name: prodClusterName
@@ -225,6 +243,7 @@ spec:
           - name: prodRedisEndpoint
             inputValue: $(tileAWSElastiCacheRedis506Prod.outputs.redisEndpoint)
 
+
   summary:
     description: |
       ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -237,26 +256,39 @@ spec:
         value: $(tileEksWithSpotProd.outputs.masterRoleARN)
       - name: Endpoint for Production Cluster
         value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
-      - name: EKS Cluster for Staging
+      - name: Update KUBECONFIG for Prodcution
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotProd.outputs.clusterName) --region $(tileEksWithSpotProd.outputs.regionOfCluster) --role-arn $(tileEksWithSpotProd.outputs.masterRoleARN)
+
+      - name: EKS Cluster for Stage
         value: $(tileEksWithSpotStage.outputs.clusterName)
       - name: Master role for Staging Cluster
         value: $(tileEksWithSpotStage.outputs.masterRoleARN)
       - name: Endpoint for Staging Cluster
         value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+      - name: Update KUBECONFIG for Prodcution
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotStage.outputs.clusterName) --region $(tileEksWithSpotStage.outputs.regionOfCluster) --role-arn $(tileEksWithSpotStage.outputs.masterRoleARN)
+
       - name: Endpoint for AgroCD
-        value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+        value: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
       - name: Administrator for AgroCD
-        value: $(tileArgocdWithExsitingEks152.outputs.user)
+        value: $(tileArgocdWithExsitingEks161.outputs.user)
       - name: Password for AgroCD Administrator
-        value: $(tileArgocdWithExsitingEks152.outputs.password)
+        value: $(tileArgocdWithExsitingEks161.outputs.password)
       - name: Jazz Endpoint for Prod
         value: http://$(tileIstio0ForProd.outputs.ingressHost)
       - name: Jazz Endpoint for Stage
         value: http://$(tileIstio0ForStage.outputs.ingressHost)
       - name: Beijing Air for Stage
-        value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/city/beijing
+        value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/v1/city/beijing
       
     notes:
-      - "Air qulity of city - /air/city/:city"
-      - "Air qulity of GEO - /air/geo/:lat/:lng"
-      - "README for Air - /air/aqi"
+      - |
+        Jaeger tracing : kubectl port-forward svc/tracing 8080:80 -n istio-system
+      - |
+        Prometheus : kubectl port-forward svc/prometheus 9090:9090 -n istio-system
+      - |
+        Grafana : kubectl port-forward svc/grafana 3000:3000 -n istio-system
+      - |
+        Kiali: kubectl port-forward svc/kiali 20001:20001 -n istio-system
+      - |
+        Locust: kubectl port-forward svc/locust 8089:8089 -n go-bumblebee

@@ -3,13 +3,20 @@ kind: Deployment
 metadata:
   name: istio-simple
   version: 0.1.0
+  description: |
+    The solution is a simple demo to provision mesh service framework - Istio on your 
+    choosing EKS.
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30  
+
 spec:
   template:
     tiles:
       # Istio for Stage
       tileIstio0ForProd:
         tileReference: Istio0
-        tileVersion: 1.5.4
+        tileVersion: 1.6.4
         inputs:
           - name: clusterName
             inputValue: <Replace clusterName by value>

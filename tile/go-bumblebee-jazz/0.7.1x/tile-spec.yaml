@@ -3,7 +3,7 @@ kind: Tile
 metadata:
     name: Go-Bumblebee-Jazz
     category: Application
-    version: 0.7.1
+    version: 0.7.1x
     
 spec:
   global:

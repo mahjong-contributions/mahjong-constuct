@@ -3,6 +3,32 @@ kind: Deployment
 metadata:
   name: microservice-infrastructure
   version: 0.1.0
+  description: |
+    The solution is designated for containerized microservices on AWS EKS, which provides all-in-one 
+    experience to simplify complexity and includes demo application to help understanding all 
+    capabilities. The solution will provision two seperated environments(stage and production), see 
+    following detail:
+    
+    - Stage 
+      1. VPC (priavte, public, isolation subnets, NAT)
+      2. EKS with worker nodes (Spot + On-Demand instances)
+      3. Istio
+      4. Prometheus, Grafana, Jeager Tracing, Kiali
+      5. ArgoCD
+      6. Sealed-Secret
+      
+    - Production
+      1. EKS with worker nodes (Spot + On-Demand instances)
+      2. ElastiRedis
+      3. Elasticsearch
+      4. Istio
+      5. Prometheus, Grafana, Jeager Tracing, Kiali
+      6. FluentBit
+      7. Sealed-Secret
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30
+
 spec:
   template:
     tiles:
@@ -101,7 +127,31 @@ spec:
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
-      
+            
+      # Install SealedSecret for Prod
+      tileSealedSecret010Prod:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+
+      # Install SealedSecret for Stage
+      tileSealedSecret010Stage:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+
       # ArgoCD
       tileArgocdWithExsitingEks152:
         tileReference: Argocd-With-Existing-EKS

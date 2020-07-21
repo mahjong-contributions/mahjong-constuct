@@ -3,6 +3,12 @@ kind: Deployment
 metadata:
   name: eks-simple-with-region
   version: 0.1.0
+  description: |
+    The solution is designated to quickly prevision EKS with simplest definition and built-in pattern 
+    in any reigon.
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30    
 spec:
   template:
     tiles:

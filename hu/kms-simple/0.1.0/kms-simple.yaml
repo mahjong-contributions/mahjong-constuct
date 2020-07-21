@@ -3,6 +3,12 @@ kind: Deployment
 metadata:
   name: kms-simple
   version: 0.1.0
+  description: |
+    The solution is a simple demo to generate symmetric and asymmetric on KMS.
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30  
+
 spec:
   template:
     tiles:

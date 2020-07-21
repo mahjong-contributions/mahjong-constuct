@@ -3,6 +3,35 @@ kind: Deployment
 metadata:
   name: microservice-infrastructure-linkerd
   version: 0.1.0
+  description: |
+    The solution is designated for containerized microservices on AWS EKS, which provides all-in-one 
+    experience to simplify complexity and includes demo application to help understanding all 
+    capabilities. The solution will provision two seperated environments(stage and production), see 
+    following detail:
+    
+    - Stage 
+      1. VPC (priavte, public, isolation subnets, NAT)
+      2. EKS with worker nodes (Spot + On-Demand instances)
+      3. Linkerd
+      4. Prometheus, Grafana, Jeager Tracing, Kiali
+      5. ArgoCD
+      6. Sealed-Secret
+      7. Traefik
+      
+    - Production
+      1. EKS with worker nodes (Spot + On-Demand instances)
+      2. ElastiRedis
+      3. Elasticsearch
+      4. Linkerd
+      5. Prometheus, Grafana, Jeager Tracing, Kiali
+      6. FluentBit
+      7. Sealed-Secret
+      8. Traefik
+      
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30
+
 spec:
   template:
     tiles:

@@ -3,10 +3,16 @@ kind: Deployment
 metadata:
   name: backing-services
   version: 0.1.0
+  description: |
+    The solution is a simple demo to provision multiple backing services: ElastiCache Redis,
+    Aurora MySQL and Elasticsearch through simple definition.
+  Author: AWS.Builder
+  License: Apache 2.0
+  Released: 2020-06-30  
+
 spec:
   template:
     tiles:
-      
       # ElsatiCache Redis for Prod
       tileAWSElastiCacheRedis506Prod:
         tileReference: AWS-ElastiCache-Redis
