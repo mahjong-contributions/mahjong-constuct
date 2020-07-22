@@ -7,7 +7,7 @@ metadata:
     The solution is a simple demo to generate symmetric and asymmetric on KMS.
   Author: AWS.Builder
   License: Apache 2.0
-  Released: 2020-06-30  
+  Released: 2020-06-30T00:00:00Z  
 
 spec:
   template:
