@@ -30,7 +30,7 @@ spec:
       - name: PrepareAppContent
         command: |
           cd $TILE_HOME
-          rm -rf $APP_REPO;git clone https://github.com/$APP_CONF_REPO_USER/$APP_REPO.git
+          rm -rf $APP_REPO;git clone https://github.com/$APP_REPO_USER/$APP_REPO.git
           cd $APP_REPO
           git checkout $APP_REPO_BRANCH
           git pull
@@ -40,10 +40,10 @@ spec:
             cd manifests/kustomize/production/air
             sed -i -e 's/redis-cart:6379/'$prod_redis_endpoint'/g' air-deployment.yaml
           fi
-      - name: SyncAppContentToRepository
+      - name: SyncAppContentToConfigRepository
         command: |
           cd $TILE_HOME
-          rm -rf APP_CONF_REPO;git clone https://$APP_CONF_REPO_ACCESS_TOKEN:x-oauth-basic@github.com/$APP_CONF_REPO_USER/$APP_CONF_REPO.git
+          rm -rf $APP_CONF_REPO;git clone https://$APP_CONF_REPO_ACCESS_TOKEN:x-oauth-basic@github.com/$APP_CONF_REPO_USER/$APP_CONF_REPO.git
           cd $APP_CONF_REPO
           cp -r ../$APP_REPO/manifests/* .
           git add -A
@@ -68,7 +68,7 @@ spec:
       - name: Register2Codebuild
         command: |
           cd $TILE_HOME/scripts
-          ./import-source-credential.sh
+          ./import-source-credential.sh $APP_CONF_REPO_ACCESS_TOKEN $APP_CONF_REPO_USER
           ./create-iam-role.sh
           ./register-to-codebuild.sh
       - name: PrepareKubeConfig
@@ -84,6 +84,25 @@ spec:
         command: |
           cd $TILE_HOME/manifest/argocd
           ARGOCD_TOKEN=`curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/session -d $'{"username":"$(self.inputs.argocdUser)","password":"$(self.inputs.argocdPassword)"}'|jq -r '.token'`
+          if [ "$ARGOCD_TOKEN" = "" ]
+          then
+            
+            for i in {1..10}
+            do 
+              echo "REtry get TOKEN: $i"
+              ARGOCD_TOKEN=`curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/session -d $'{"username":"$(self.inputs.argocdUser)","password":"$(self.inputs.argocdPassword)"}'|jq -r '.token'`
+              if [ "$ARGOCD_TOKEN" != "" ]
+              then
+                break
+              fi
+            done
+          fi
+          if [ "$ARGOCD_TOKEN" = "" ]
+          then
+            echo "!!!Fail to get ARGOCD_TOKEN!!!"
+            exit 1
+          fi
+
           githubRepo=$(echo https://$APP_CONF_REPO_ACCESS_TOKEN:x-oauth-basic@github.com/$APP_CONF_REPO_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
 
           # add staging deployment 

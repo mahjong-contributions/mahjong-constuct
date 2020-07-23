@@ -2,7 +2,7 @@ apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
     name: EFS
-    category: Storage
+    category: CDK
     version: 0.1.0
 spec:
   dependencies:

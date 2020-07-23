@@ -120,32 +120,39 @@ export class EksWithSpot extends cdk.Construct {
 
     this.capacityInstance=""
     props.capacityInstance?.forEach(c => {
-      this.capacityInstance = c + "/" + this.capacityInstance
+      this.capacityInstance = c + "/" + this.capacityInstance;
     })
-    this.capacityInstance=this.capacityInstance.substring(0,this.capacityInstance.length-1)
+    this.capacityInstance=this.capacityInstance.substring(0,this.capacityInstance.length-1);
 
     /** Added CF Output */
-    new cdk.CfnOutput(scope,"regionOfCluster", {value: process.env.CDK_DEFAULT_REGION || ""})
-    new cdk.CfnOutput(scope,"clusterName", {value: props.clusterName})
-    new cdk.CfnOutput(scope,"clusterVersion", {value: props.clusterVersion || '1.17'})
-    new cdk.CfnOutput(scope,"masterRoleARN", {value: eksRole.roleArn})
-    new cdk.CfnOutput(scope,"clusterEndpoint", {value: cluster.clusterEndpoint})
-    new cdk.CfnOutput(scope,"clusterArn", {value: cluster.clusterArn})
-
+    new cdk.CfnOutput(scope,"regionOfCluster", {value: process.env.CDK_DEFAULT_REGION || ""});
+    new cdk.CfnOutput(scope,"clusterName", {value: props.clusterName});
+    new cdk.CfnOutput(scope,"clusterVersion", {value: props.clusterVersion || '1.17'});
+    new cdk.CfnOutput(scope,"masterRoleARN", {value: eksRole.roleArn});
+    new cdk.CfnOutput(scope,"clusterEndpoint", {value: cluster.clusterEndpoint});
+    new cdk.CfnOutput(scope,"clusterArn", {value: cluster.clusterArn});
     
 
-    new cdk.CfnOutput(scope,"autoScalingGroupMaxSize", {value: spotNodeGroups[0].autoScalingGroup.maxSize })
-    new cdk.CfnOutput(scope,"autoScalingGroupMinSize", {value: spotNodeGroups[0].autoScalingGroup.minSize })
-    new cdk.CfnOutput(scope,"autoScalingGroupDesiredCapacity", {value: spotNodeGroups[0].autoScalingGroup.desiredCapacity || "" })
+    new cdk.CfnOutput(scope,"autoScalingGroupMaxSize", {value: spotNodeGroups[0].autoScalingGroup.maxSize });
+    new cdk.CfnOutput(scope,"autoScalingGroupMinSize", {value: spotNodeGroups[0].autoScalingGroup.minSize });
+    new cdk.CfnOutput(scope,"autoScalingGroupDesiredCapacity", {value: spotNodeGroups[0].autoScalingGroup.desiredCapacity || "" });
 
+    /** Aggragate group names and roles int proper string: "string1, string2, ..."*/
+    let gNames=""
+    let roles=""
     for (let i=0; i<(props.numberOfASG || 1); i++) {
-      new cdk.CfnOutput(scope,"autoScalingGroupName"+i, {value: spotNodeGroups[i].autoScalingGroup.autoScalingGroupName || ""})
-      new cdk.CfnOutput(scope,"nodesRoleARN"+i, {value: spotNodeGroups[i].nodesRole.roleArn})
-  
+      gNames = gNames + spotNodeGroups[i].autoScalingGroup.autoScalingGroupName || "" + ","
+      roles = roles + spotNodeGroups[i].nodesRole.roleArn + ","
     }
-    new cdk.CfnOutput(scope,"capacityInstance", {value: this.capacityInstance})
-    new cdk.CfnOutput(scope,"clusterCertificateAuthorityData", {value: cluster.clusterCertificateAuthorityData})
-    
+    gNames=gNames.slice(0,-1)
+    roles=roles.slice(0,-1)
+    new cdk.CfnOutput(scope,"autoScalingGroupName", {value: gNames});
+    new cdk.CfnOutput(scope,"nodesRoleARN", {value: roles});
+    ////
+
+    new cdk.CfnOutput(scope,"capacityInstance", {value: this.capacityInstance});
+    new cdk.CfnOutput(scope,"clusterCertificateAuthorityData", {value: cluster.clusterCertificateAuthorityData});
+
     this.regionOfCluster = process.env.CDK_DEFAULT_REGION || "";
     this.clusterName = cluster.clusterName;
     this.clusterVersion = props.clusterVersion || '1.17';
@@ -156,12 +163,13 @@ export class EksWithSpot extends cdk.Construct {
     this.autoScalingGroupMaxSize = spotNodeGroups[0].autoScalingGroup.maxSize;
     this.autoScalingGroupMinSize = spotNodeGroups[0].autoScalingGroup.minSize;
     this.autoScalingGroupDesiredCapacity = spotNodeGroups[0].autoScalingGroup.desiredCapacity || "";
-  
+
+    /** Pass group names and roles to local array */
     for (let i=0; i<(props.numberOfASG || 1); i++) {
       this.autoScalingGroupName[i] = spotNodeGroups[i].autoScalingGroup.autoScalingGroupName || "";
       this.nodesRoleARN[i] = spotNodeGroups[i].nodesRole.roleArn;
     }
-
+    ////
 
     this.clusterCertificateAuthorityData = cluster.clusterCertificateAuthorityData
 

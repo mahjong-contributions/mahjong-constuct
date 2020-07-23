@@ -2,7 +2,7 @@ apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
     name: AWS-ElastiCache-Redis
-    category: Database
+    category: CDK
     version: 5.0.6
 spec:
 

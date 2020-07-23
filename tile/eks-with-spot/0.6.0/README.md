@@ -7,8 +7,10 @@ The Tile is came with default EKS 1.16 and using auto scaling group with mixed s
 - Network0 [ v0.0.1 ]
 
 ## Changelogs
-- upgrade Default version to 1.17
+- Upgrade Default storage to 100G
+- Upgrade Default EKS version to 1.17
 - Support multiple autoscaling group as worker nodes 
+- Support multi verision of cluster autoscaler: 1.15.6, 1.16.5, 1.17.2
 
 ## Inputs
 

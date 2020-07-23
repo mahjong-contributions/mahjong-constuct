@@ -54,7 +54,7 @@ spec:
           - name: clusterName
             inputValue: mahjong-eks-prod
           - name: clusterVersion
-            inputValue: 1.16
+            inputValue: 1.17
           - name: keyPair4EC2
             inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
@@ -72,7 +72,7 @@ spec:
           - name: clusterName
             inputValue: mahjong-eks-stage
           - name: clusterVersion
-            inputValue: 1.16
+            inputValue: 1.17
           - name: keyPair4EC2
             inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
@@ -176,9 +176,10 @@ spec:
       tileArgocdWithExsitingEks161x:
         tileReference: Argocd-With-Existing-EKS
         tileVersion: 1.6.1x
+        # !!! Using first dependent tileInstance to determine rootTileInstance !!!
         dependsOn: 
-          - tileLinkerdProd
-          - tileLinkerdStage
+          - tileIstio0ForStage
+          - tileIstio0ForProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         
@@ -199,7 +200,9 @@ spec:
           - name: githubAccessToken
             inputValue: <<parameter>> - github access token
           - name: appConfRepo
-            inputValue: go-microservice-config  
+            inputValue: go-microservice-all-in-one-config
+          - name: appConfRepoBranch
+            inputValue: master
       
       # Inject DEMO Applications & setup CI+CD
       tileGoBumblebeeJazz071x:
@@ -209,13 +212,13 @@ spec:
           - tileArgocdWithExsitingEks161x
         inputs:
           - name: appConfRepoUser
-            inputValue: mahjong-contributions
+            inputValue: <<parameter>> - github user
           - name: appConfRepoAccessToken
-            inputValue: <<parameter>> - personal access token for GitHub
+            inputValue: <<parameter>> - github access token
           - name: appConfRepo
-            inputValue: master
+            inputValue: go-microservice-all-in-one-config
           - name: appConfRepoBranch
-            inputValue: go-bumblebee-jazz-config
+            inputValue: master
           - name: appRepoUser
             inputValue: mahjong-contributions
           - name: appRepo
@@ -225,11 +228,11 @@ spec:
           - name: kmsKeyID
             inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
           - name: argocdBaseUrl
-            inputValue: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
+            inputValue: $(tileArgocdWithExsitingEks161x.outputs.argocdBaseUrl)
           - name: argocdUser
-            inputValue: $(tileArgocdWithExsitingEks161.outputs.user)
+            inputValue: $(tileArgocdWithExsitingEks161x.outputs.user)
           - name: argocdPassword
-            inputValue: $(tileArgocdWithExsitingEks161.outputs.password)
+            inputValue: $(tileArgocdWithExsitingEks161x.outputs.password)
           - name: prodClusterEndpoint
             inputValue: $(tileEksWithSpotProd.outputs.clusterEndpoint)
           - name: prodClusterName
@@ -269,11 +272,11 @@ spec:
         value: aws eks update-kubeconfig --name $(tileEksWithSpotStage.outputs.clusterName) --region $(tileEksWithSpotStage.outputs.regionOfCluster) --role-arn $(tileEksWithSpotStage.outputs.masterRoleARN)
 
       - name: Endpoint for AgroCD
-        value: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
+        value: $(tileArgocdWithExsitingEks161x.outputs.argocdBaseUrl)
       - name: Administrator for AgroCD
-        value: $(tileArgocdWithExsitingEks161.outputs.user)
+        value: $(tileArgocdWithExsitingEks161x.outputs.user)
       - name: Password for AgroCD Administrator
-        value: $(tileArgocdWithExsitingEks161.outputs.password)
+        value: $(tileArgocdWithExsitingEks161x.outputs.password)
       - name: Jazz Endpoint for Prod
         value: http://$(tileIstio0ForProd.outputs.ingressHost)
       - name: Jazz Endpoint for Stage

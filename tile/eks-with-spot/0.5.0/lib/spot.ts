@@ -108,7 +108,7 @@ export class EksNodesSpot extends cdk.Construct {
                 blockDeviceMappings: [{
                     deviceName: "/dev/xvda",
                     ebs: {
-                        volumeSize: 40,
+                        volumeSize: 100,
                         deleteOnTermination: true
                     }
                 }]

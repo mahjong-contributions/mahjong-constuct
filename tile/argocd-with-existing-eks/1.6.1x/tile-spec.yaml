@@ -63,6 +63,24 @@ spec:
           ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`
           ARGOCD_BASE_URL=https://$ARGOCD_SERVER/argocd
           ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
+          if [ "$ARGOCD_TOKEN" = "" ]
+          then
+            
+            for i in {1..10}
+            do 
+              echo "REtry get TOKEN: $i"
+              ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
+              if [ "$ARGOCD_TOKEN" != "" ]
+              then
+                break
+              fi
+            done
+          fi
+          if [ "$ARGOCD_TOKEN" = "" ]
+          then
+            echo "!!!Fail to get ARGOCD_TOKEN!!!"
+            exit 1
+          fi
 
       - name: SetupRemoteCluster
         command: |
@@ -118,6 +136,10 @@ spec:
           sed -e 's/__github_repo__/'$githubRepo'/g' \
               -e 's/__github_access_token__/'$GITHUB_ACCESS_TOKEN'/g' ./add-repo.json > ./add-repo-go.json
           curl -s -k $ARGOCD_BASE_URL/api/v1/repositories -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-repo-go.json"
+      - name: ResetKube2Origin
+        command: |
+          # Reset kube context to origin
+          aws eks update-kubeconfig --name $(self.inputs.clusterName) --region $AWS_REGION --role-arn $(self.inputs.masterRoleARN) --kubeconfig $KUBECONFIG
         
           
   inputs:
@@ -160,7 +182,9 @@ spec:
     - name: appConfRepo
       inputType: String
       require: true
-
+    - name: appConfRepoBranch
+      inputType: String
+      require: true
 
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
