@@ -214,8 +214,8 @@ spec:
         tileReference: Argocd-With-Existing-EKS
         tileVersion: 1.6.1x
         dependsOn: 
-          - tileLinkerdProd
           - tileLinkerdStage
+          - tileLinkerdProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         

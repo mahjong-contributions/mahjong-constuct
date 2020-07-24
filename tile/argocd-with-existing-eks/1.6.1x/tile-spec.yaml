@@ -52,35 +52,34 @@ spec:
               "admin.password": "$2a$10$lv90EJg9bW88XqUjjkhpWekVoRZVVgtLULKuiui/eUmAnR/rlL/ui",
               "admin.passwordMtime": "'$(date +%FT%T%Z)'"
             }}'
-      - name: InstallRollouts
-        command: |
-          cd $TILE_HOME
-          kubectl create namespace argo-rollouts || true
-          kubectl apply -f lib/rollouts.yaml -n argo-rollouts
+        readinessProbe:
+          command: |
+            ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`
+            ARGOCD_BASE_URL=https://$ARGOCD_SERVER/argocd
+            ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
+            if [ "$ARGOCD_TOKEN" = "" ]
+            then
+              echo "!!!Fail to get ARGOCD_TOKEN!!!"
+              exit 1
+            fi
+            echo "Get ArgoCD Token with success."
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1
 
       - name: GetArgoCDToken
         command: |
           ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`
           ARGOCD_BASE_URL=https://$ARGOCD_SERVER/argocd
           ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
-          if [ "$ARGOCD_TOKEN" = "" ]
-          then
-            
-            for i in {1..10}
-            do 
-              echo "REtry get TOKEN: $i"
-              ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
-              if [ "$ARGOCD_TOKEN" != "" ]
-              then
-                break
-              fi
-            done
-          fi
-          if [ "$ARGOCD_TOKEN" = "" ]
-          then
-            echo "!!!Fail to get ARGOCD_TOKEN!!!"
-            exit 1
-          fi
+
+      - name: InstallRollouts
+        command: |
+          cd $TILE_HOME
+          kubectl create namespace argo-rollouts || true
+          kubectl apply -f lib/rollouts.yaml -n argo-rollouts
 
       - name: SetupRemoteCluster
         command: |
@@ -131,8 +130,18 @@ spec:
           failureThreshold: -1
       - name: RegisterConfigurationRepository
         command: |
+          # Initial Repo
+          cd $TILE_HOME
+          rm -rf $APP_CONF_REPO;git clone https://$GITHUB_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git
+          cd $APP_CONF_REPO
+          echo "# $APP_CONF_REPO" >> README.md
+          git add README.md
+          git commit -m "first commit"
+          git push -u origin master
+          
+          # Register Repo
           cd $TILE_HOME/lib
-          githubRepo=$(echo https://$GITHUB_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
+          githubRepo=$(echo https://github.com/$GITHUB_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
           sed -e 's/__github_repo__/'$githubRepo'/g' \
               -e 's/__github_access_token__/'$GITHUB_ACCESS_TOKEN'/g' ./add-repo.json > ./add-repo-go.json
           curl -s -k $ARGOCD_BASE_URL/api/v1/repositories -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-repo-go.json"
